@@ -54,16 +54,14 @@ jobs:
 
             cd ~/validpanel-cli/release
 
-            # Ensure user-local npm prefix is set
-            if ! grep -q "prefix=" ~/.npmrc 2>/dev/null; then
-              mkdir -p ~/.npm-global
-              npm config set prefix ~/.npm-global
-              echo 'export PATH=$HOME/.npm-global/bin:$PATH' >> ~/.bashrc
+            # Clean old install and reinstall globally for all users
+            sudo npm uninstall -g . || true
+            sudo npm install -g .
+
+            # Verify installation
+            if command -v validpanel-cli >/dev/null 2>&1; then
+              echo "✅ validpanel-cli deployed and installed globally"
+            else
+              echo "❌ validpanel-cli not found in PATH"
+              exit 1
             fi
-
-            # Clean old install and reinstall globally
-            npm uninstall -g . || true
-            npm install -g .
-
-            which validpanel-cli || echo "⚠️ CLI not in PATH"
-            echo "✅ validpanel-cli deployed and installed globally"
