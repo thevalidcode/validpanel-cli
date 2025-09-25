@@ -8,7 +8,7 @@
     "build": "tsc"
   },
   "bin": {
-    "validpanel-cli": "./index.js"
+    "validpanel-cli": "./dist/cli.js"
   },
   "keywords": [],
   "author": "",
