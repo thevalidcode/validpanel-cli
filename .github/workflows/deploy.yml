@@ -28,6 +28,7 @@ jobs:
           rm -rf release
           mkdir -p release
           cp -r dist release/
+          cp -r src/templates release/dist/
           cp package.json release/
           cp package-lock.json release/
 
