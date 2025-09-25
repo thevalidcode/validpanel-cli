@@ -38,7 +38,7 @@ jobs:
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SERVER_SSH_KEY }}
           port: 2022
-          source: "release/*"
+          source: "release"
           target: "~/validpanel-cli"
           overwrite: true
 
@@ -52,7 +52,7 @@ jobs:
           script: |
             set -e
 
-            cd ~/validpanel-cli
+            cd ~/validpanel-cli/release
 
             # Ensure user-local npm prefix is set
             if ! grep -q "prefix=" ~/.npmrc 2>/dev/null; then
