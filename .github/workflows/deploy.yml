@@ -5,6 +5,10 @@ on:
     branches:
       - main
 
+concurrency:
+  group: deploy-validpanel-cli
+  cancel-in-progress: true
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
@@ -13,21 +17,21 @@ jobs:
       - name: 📥 Checkout code
         uses: actions/checkout@v4
 
-      - name: 🛠️ Install deps & build
+      - name: 🛠️ Build CLI
         run: |
           npm ci
           npm run build
           npm prune --production
 
-      - name: 📦 Package release (dist + templates + package.json + lock + node_modules)
+      - name: 📦 Prepare release bundle
         run: |
+          rm -rf release
           mkdir -p release
           cp -r dist release/
           cp package.json release/
           cp package-lock.json release/
-          cp -r node_modules release/
 
-      - name: 📤 Upload release bundle
+      - name: 📤 Upload release to server
         uses: appleboy/scp-action@v0.1.7
         with:
           host: ${{ secrets.SERVER_IP }}
@@ -46,6 +50,20 @@ jobs:
           key: ${{ secrets.SERVER_SSH_KEY }}
           port: 2022
           script: |
+            set -e
+
             cd ~/validpanel-cli
+
+            # Ensure user-local npm prefix is set
+            if ! grep -q "prefix=" ~/.npmrc 2>/dev/null; then
+              mkdir -p ~/.npm-global
+              npm config set prefix ~/.npm-global
+              echo 'export PATH=$HOME/.npm-global/bin:$PATH' >> ~/.bashrc
+            fi
+
+            # Clean old install and reinstall globally
+            npm uninstall -g . || true
             npm install -g .
+
+            which validpanel-cli || echo "⚠️ CLI not in PATH"
             echo "✅ validpanel-cli deployed and installed globally"

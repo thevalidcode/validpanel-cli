@@ -1,37 +1,34 @@
 #!/usr/bin/env ts-node
 
 import { Command } from "commander";
-import { addDnsRecord } from "./commands/dns";
-import { setupApacheVhost } from "./commands/apache";
-import { issueSslCertificate } from "./commands/ssl";
 import { version } from "../package.json";
+import { addStore, rebuildStores, removeStore } from "./commands/store";
 
 const program = new Command();
 
 program
   .name("validpanel-cli")
-  .description("CLI for managing DNS, Apache vhosts, and SSL")
+  .description("Validpanel CLI for managing DNS and caddy configs for stores")
   .version(version);
 
 program
-  .command("dns:add")
-  .description("Add a DNS record")
+  .command("stores:add")
+  .description("Add a store")
   .argument("<domain>", "Domain name")
-  .argument("<type>", "Record type (A, CNAME, MX, etc.)")
-  .argument("<value>", "Record value")
-  .action(addDnsRecord);
+  .argument("<storeType>", "Type of store (e.g., 'social-media-store', 'shop')")
+  .action(addStore);
 
 program
-  .command("apache:vhost")
-  .description("Create Apache vhost")
+  .command("stores:delete")
+  .description("Delete a store")
   .argument("<domain>", "Domain name")
-  .argument("<proxyPass>", "Proxy backend (e.g. http://127.0.0.1:5000)")
-  .action(setupApacheVhost);
+  .argument("<storeType>", "Type of store (e.g., 'social-media-store', 'shop')")
+  .action(removeStore);
 
 program
-  .command("ssl:issue")
-  .description("Issue SSL certificate with acme.sh")
-  .argument("<domain>", "Domain name")
-  .action(issueSslCertificate);
+  .command("stores:rebuild")
+  .description("Rebuild all stores (if needed after crash/migration)")
+  .argument("<stores>", "JSON array of stores with domain and type")
+  .action(rebuildStores);
 
 program.parse();
