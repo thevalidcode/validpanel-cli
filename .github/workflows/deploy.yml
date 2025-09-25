@@ -54,7 +54,12 @@ jobs:
 
             cd ~/validpanel-cli/release
 
-            # Clean old install and reinstall globally for all users
+            chmod +x dist/cli.js
+
+            # Install all dependencies (production only, to keep it slim)
+            npm ci --only=production
+
+            # Clean old global install and reinstall
             sudo npm uninstall -g . || true
             sudo npm install -g .
 
