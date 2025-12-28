@@ -2,7 +2,13 @@
 
     # Frontend: proxy for social-media-store, static for others
     <% if (storeType === 'social-media-store') { %>
-    reverse_proxy 127.0.0.1:4340
+    reverse_proxy localhost:4340
+
+    encode gzip
+    log {
+      output file /var/log/caddy/social-media-store.log
+    }
+
     <% } else { %>
     root * /var/www/<%- storeType %>
     file_server
