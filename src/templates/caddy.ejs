@@ -1,13 +1,19 @@
 <%- domain %>, www.<%- domain %> {
+
+    # Frontend: proxy for social-media-store, static for others
+    <% if (storeType === 'social-media-store') { %>
+    reverse_proxy 127.0.0.1:4340
+    <% } else { %>
     root * /var/www/<%- storeType %>
     file_server
+    <% } %>
 
-    # WebSocket reverse proxy (secondary port)
+    # WebSocket proxy
     handle_path /<%- storeType %>/ws/* {
         reverse_proxy 127.0.0.1:<%- secondaryPort %>
     }
 
-    # Backend reverse proxy (primary port)
+    # Backend proxy
     handle_path /<%- storeType %>/backend/* {
         reverse_proxy 127.0.0.1:<%- primaryPort %> {
             transport http {
