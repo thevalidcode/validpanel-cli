@@ -14,18 +14,8 @@
     file_server
     <% } %>
 
-    # WebSocket proxy
-    handle_path /<%- storeType %>/ws/* {
-        reverse_proxy 127.0.0.1:<%- secondaryPort %>
-    }
-
     # Backend proxy
     handle_path /<%- storeType %>/backend/* {
-        reverse_proxy 127.0.0.1:<%- primaryPort %> {
-            transport http {
-                tls
-                tls_server_name validpanel.com
-            }
-        }
+        reverse_proxy 127.0.0.1:<%- primaryPort %>
     }
 }
