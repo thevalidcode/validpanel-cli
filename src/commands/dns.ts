@@ -10,7 +10,7 @@ import { parse } from "tldts";
 function runPdnsCommand(command: string): string {
   Logger.info(`Running: pdnsutil ${command}`);
 
-  const result = shell.exec(`pdnsutil ${command}`, { silent: true });
+  const result = shell.exec(`sudo pdnsutil ${command}`, { silent: true });
 
   if (result.code !== 0) {
     Logger.error(`pdnsutil failed: ${result.stderr}`);
