@@ -45,12 +45,27 @@ export function addDnsRecord(
   value: string,
   ttl = 300
 ) {
-  const zone = getZone(domain); // example.com from www.example.com
-  Logger.info(`Adding DNS record: ${domain} ${type} ${value}`);
+  const zone = getZone(domain); // validpanel.com
 
-  runPdnsCommand(`add-record ${zone} ${domain}. ${type} ${ttl} ${value}`);
+  let recordName = domain
+    .replace(new RegExp(`\\.?${zone}$`), "") // remove ".validpanel.com"
+    .replace(/\.$/, ""); // safety cleanup
 
-  Logger.success(`DNS record added: ${domain} ${type} ${value}`);
+  if (!recordName) {
+    recordName = "@";
+  }
+
+  Logger.info(
+    `Adding DNS record: zone=${zone}, name=${recordName}, type=${type}, value=${value}`
+  );
+
+  runPdnsCommand(
+    `add-record ${zone} ${recordName} ${type} ${ttl} ${value}`
+  );
+
+  Logger.success(
+    `DNS record added: ${recordName}.${zone} ${type} ${value}`
+  );
 }
 
 /**
