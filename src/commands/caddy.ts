@@ -35,7 +35,7 @@ async function renderConfig(
  */
 export function reloadCaddy() {
   Logger.info("Reloading Caddy...");
-  const result = shell.exec("systemctl reload caddy", { silent: true });
+  const result = shell.exec("sudo systemctl reload caddy", { silent: true });
   if (result.code !== 0) {
     Logger.error(`Failed to reload Caddy: ${result.stderr}`);
     throw new Error(result.stderr);
