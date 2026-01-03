@@ -82,7 +82,7 @@ export async function createCaddyConfig(
 export async function updateCaddyConfig(
   domain: string,
   storeType: "shop" | "social-media-store",
-  primaryPort: number,
+  primaryPort: number
 ) {
   Logger.info(`Updating Caddy config for ${domain}`);
   await createCaddyConfig(domain, storeType, primaryPort);

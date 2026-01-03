@@ -59,13 +59,9 @@ export function addDnsRecord(
     `Adding DNS record: zone=${zone}, name=${recordName}, type=${type}, value=${value}`
   );
 
-  runPdnsCommand(
-    `add-record ${zone} ${recordName} ${type} ${ttl} ${value}`
-  );
+  runPdnsCommand(`add-record ${zone} ${recordName} ${type} ${ttl} ${value}`);
 
-  Logger.success(
-    `DNS record added: ${recordName}.${zone} ${type} ${value}`
-  );
+  Logger.success(`DNS record added: ${recordName}.${zone} ${type} ${value}`);
 }
 
 /**
@@ -88,15 +84,10 @@ export function deleteDnsRecord(domain: string, type: string) {
     `Deleting DNS record: zone=${zone}, name=${recordName}, type=${type}`
   );
 
-  runPdnsCommand(
-    `delete-rrset ${zone} ${recordName} ${type}`
-  );
+  runPdnsCommand(`delete-rrset ${zone} ${recordName} ${type}`);
 
-  Logger.success(
-    `DNS record deleted: ${recordName}.${zone} ${type}`
-  );
+  Logger.success(`DNS record deleted: ${recordName}.${zone} ${type}`);
 }
-
 
 /**
  * Update a DNS record by deleting and re-adding it
@@ -112,10 +103,14 @@ export function updateDnsRecord(
   ttl = 300
 ) {
   const zone = getZone(domain);
-  let recordName = domain.replace(new RegExp(`\\.?${zone}$`), "").replace(/\.$/, "");
+  let recordName = domain
+    .replace(new RegExp(`\\.?${zone}$`), "")
+    .replace(/\.$/, "");
   if (!recordName) recordName = "@";
 
-  Logger.info(`Updating DNS record: ${recordName}.${zone} ${type} -> ${newValue}`);
+  Logger.info(
+    `Updating DNS record: ${recordName}.${zone} ${type} -> ${newValue}`
+  );
 
   // Step 1: Fetch all existing records in zone
   const zoneRecords = runPdnsCommand(`list-zone ${zone}`).split("\n");
@@ -127,7 +122,9 @@ export function updateDnsRecord(
   for (const line of zoneRecords) {
     if (recordRegex.test(line)) {
       const parts = line.trim().split(/\s+/);
-      existingValues.push(parts[2]); // value is always the 3rd column
+      if (parts[2]) {
+        existingValues.push(parts[2]); // value is always the 3rd column
+      }
     }
   }
 
@@ -151,7 +148,9 @@ export function updateDnsRecord(
   // Step 6: Add the new value
   runPdnsCommand(`add-record ${zone} ${recordName} ${type} ${ttl} ${newValue}`);
 
-  Logger.success(`DNS record updated safely: ${recordName}.${zone} ${type} ${newValue}`);
+  Logger.success(
+    `DNS record updated safely: ${recordName}.${zone} ${type} ${newValue}`
+  );
 }
 
 /**
@@ -185,7 +184,6 @@ export function createZone(zone: string) {
 
   Logger.success(`Zone created: ${zone} with NS: ${ns1}, ${ns2}`);
 }
-
 
 /**
  * Delete a zone
