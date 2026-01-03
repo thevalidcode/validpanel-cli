@@ -5,7 +5,8 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "tsc"
+    "build": "tsc",
+    "typecheck": "tsc --noEmit"
   },
   "bin": {
     "validpanel-cli": "./dist/cli.js"
@@ -17,12 +18,14 @@
     "@types/node": "^24.5.1",
     "chalk": "^5.6.2",
     "commander": "^14.0.1",
+    "dotenv": "^17.2.3",
     "ejs": "^3.1.10",
     "inquirer": "^12.9.6",
     "shelljs": "^0.10.0",
     "tldts": "^7.0.16",
     "ts-node": "^10.9.2",
-    "typescript": "^5.9.2"
+    "typescript": "^5.9.2",
+    "zod": "^4.3.4"
   },
   "devDependencies": {
     "@types/ejs": "^3.1.5",

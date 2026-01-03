@@ -1,12 +1,19 @@
 import shell from "shelljs";
 import Logger from "../utils/Logger";
-import { createZone, deleteZone, addDnsRecord, deleteDnsRecord } from "./dns";
+import {
+  createZone,
+  deleteZone,
+  addDnsRecord,
+  deleteDnsRecord,
+  getZone,
+} from "./dns";
 import {
   createCaddyConfig,
   deleteCaddyConfig,
   reloadCaddy,
   validateCaddyConfig,
 } from "./caddy";
+import { env } from "../config/env.config";
 
 /**
  * Detect server's public IP once at startup
@@ -25,8 +32,8 @@ const SERVER_IP = getPublicIp();
  * Store configuration map
  */
 const storeConfigs = {
-  "social-media-store": { primary: 6060, secondary: 4040 },
-  shop: { primary: 7030, secondary: 5020 },
+  "social-media-store": env.SOCIAL_MEDIA_STORE_PORT,
+  shop: env.SHOP_PORT,
 } as const;
 
 type StoreType = keyof typeof storeConfigs;
@@ -37,17 +44,27 @@ type StoreType = keyof typeof storeConfigs;
 export async function addStore(domain: string, storeType: StoreType) {
   Logger.info(`🚀 Adding ${storeType} store for domain: ${domain}`);
 
-  const { primary, secondary } = storeConfigs[storeType];
+  const port = storeConfigs[storeType];
 
-  // 1. Create zone if it doesn’t exist
-  try {
-    createZone(domain);
-  } catch (err: any) {
-    if (err.message.includes("exists")) {
-      Logger.warn(`Zone already exists for ${domain}, skipping creation`);
-    } else {
-      throw err;
+  // 1. Determine if domain is a subdomain of an existing zone or needs its own zone
+  const domainZone = getZone(domain);
+  const isSubdomain = domain !== domainZone;
+
+  if (!isSubdomain) {
+    // Only create zone if it's a root domain, not a subdomain
+    try {
+      createZone(domain);
+    } catch (err: any) {
+      if (err.message.includes("exists")) {
+        Logger.warn(`Zone already exists for ${domain}, skipping creation`);
+      } else {
+        throw err;
+      }
     }
+  } else {
+    Logger.info(
+      `Subdomain detected (${domain} -> zone: ${domainZone}), skipping zone creation`
+    );
   }
 
   // 2. Add DNS records (A + www)
@@ -55,14 +72,12 @@ export async function addStore(domain: string, storeType: StoreType) {
   addDnsRecord(`www.${domain}`, "A", SERVER_IP);
 
   // 3. Create Caddy config
-  await createCaddyConfig(domain, storeType, primary, secondary);
+  await createCaddyConfig(domain, storeType, port);
 
   // 4. Reload Caddy if config is valid
   if (validateCaddyConfig()) reloadCaddy();
 
-  Logger.success(
-    `✅ Store added: ${domain} (${storeType}) → ports ${primary}/${secondary}`
-  );
+  Logger.success(`✅ Store added: ${domain} (${storeType}) → ports ${port}}`);
 }
 
 /**

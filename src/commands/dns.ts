@@ -21,11 +21,15 @@ function runPdnsCommand(command: string): string {
 }
 
 export function getZone(domain: string): string {
+  // Extract the registrable domain (handles subdomains and complex TLDs)
+  // e.g., "www.example.com" -> "example.com"
+  // e.g., "api.mystore.validpanel.com" -> "validpanel.com"
+  // e.g., "example.validplug.com.ng" -> "validplug.com.ng"
   const parsed = parse(domain);
   if (!parsed.domain) {
     throw new Error(`Invalid domain: ${domain}`);
   }
-  return parsed.domain; // e.g., validplug.com.ng
+  return parsed.domain;
 }
 
 /**

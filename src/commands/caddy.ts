@@ -19,14 +19,12 @@ if (!fs.existsSync(sitesDir)) {
 async function renderConfig(
   domain: string,
   storeType: "shop" | "social-media-store",
-  primaryPort: number,
-  secondaryPort: number
+  primaryPort: number
 ): Promise<string> {
   return ejs.renderFile(templatePath, {
     domain,
     storeType,
     primaryPort,
-    secondaryPort,
   });
 }
 
@@ -65,17 +63,11 @@ export function validateCaddyConfig(): boolean {
 export async function createCaddyConfig(
   domain: string,
   storeType: "shop" | "social-media-store",
-  primaryPort: number,
-  secondaryPort: number
+  primaryPort: number
 ) {
   Logger.info(`Creating Caddy config for ${domain}`);
 
-  const config = await renderConfig(
-    domain,
-    storeType,
-    primaryPort,
-    secondaryPort
-  );
+  const config = await renderConfig(domain, storeType, primaryPort);
   const siteFile = path.join(sitesDir, `${domain}.caddy`);
 
   fs.writeFileSync(siteFile, config);
@@ -91,10 +83,9 @@ export async function updateCaddyConfig(
   domain: string,
   storeType: "shop" | "social-media-store",
   primaryPort: number,
-  secondaryPort: number
 ) {
   Logger.info(`Updating Caddy config for ${domain}`);
-  await createCaddyConfig(domain, storeType, primaryPort, secondaryPort);
+  await createCaddyConfig(domain, storeType, primaryPort);
   Logger.success(`Caddy config updated for ${domain}`);
 }
 
