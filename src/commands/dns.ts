@@ -74,13 +74,29 @@ export function addDnsRecord(
  * @param type Record type to delete
  */
 export function deleteDnsRecord(domain: string, type: string) {
-  const zone = getZone(domain);
-  Logger.info(`Deleting DNS record: ${domain} ${type}`);
+  const zone = getZone(domain); // validpanel.com
 
-  runPdnsCommand(`delete-rrset ${zone} ${domain} ${type}`);
+  let recordName = domain
+    .replace(new RegExp(`\\.?${zone}$`), "")
+    .replace(/\.$/, "");
 
-  Logger.success(`DNS record deleted: ${domain} ${type}`);
+  if (!recordName) {
+    recordName = "@";
+  }
+
+  Logger.info(
+    `Deleting DNS record: zone=${zone}, name=${recordName}, type=${type}`
+  );
+
+  runPdnsCommand(
+    `delete-rrset ${zone} ${recordName} ${type}`
+  );
+
+  Logger.success(
+    `DNS record deleted: ${recordName}.${zone} ${type}`
+  );
 }
+
 
 /**
  * Update a DNS record by deleting and re-adding it
@@ -95,12 +111,47 @@ export function updateDnsRecord(
   newValue: string,
   ttl = 300
 ) {
-  Logger.info(`Updating DNS record: ${domain} ${type} -> ${newValue}`);
+  const zone = getZone(domain);
+  let recordName = domain.replace(new RegExp(`\\.?${zone}$`), "").replace(/\.$/, "");
+  if (!recordName) recordName = "@";
 
-  deleteDnsRecord(domain, type); // Remove old one
-  addDnsRecord(domain, type, newValue, ttl); // Add new one
+  Logger.info(`Updating DNS record: ${recordName}.${zone} ${type} -> ${newValue}`);
 
-  Logger.success(`DNS record updated: ${domain} ${type} ${newValue}`);
+  // Step 1: Fetch all existing records in zone
+  const zoneRecords = runPdnsCommand(`list-zone ${zone}`).split("\n");
+
+  // Step 2: Extract current values for this record name + type
+  const existingValues: string[] = [];
+  const recordRegex = new RegExp(`^${recordName}\\s+${type}\\s+`, "i");
+
+  for (const line of zoneRecords) {
+    if (recordRegex.test(line)) {
+      const parts = line.trim().split(/\s+/);
+      existingValues.push(parts[2]); // value is always the 3rd column
+    }
+  }
+
+  // Step 3: If newValue already exists, do nothing
+  if (existingValues.includes(newValue)) {
+    Logger.info(`Record already exists with same value. No changes made.`);
+    return;
+  }
+
+  // Step 4: Delete old RRSET if it exists
+  if (existingValues.length > 0) {
+    runPdnsCommand(`delete-rrset ${zone} ${recordName} ${type}`);
+    Logger.info(`Deleted old ${type} records for ${recordName}.${zone}`);
+  }
+
+  // Step 5: Add back all previous values except duplicates + new value
+  for (const val of existingValues) {
+    runPdnsCommand(`add-record ${zone} ${recordName} ${type} ${ttl} ${val}`);
+  }
+
+  // Step 6: Add the new value
+  runPdnsCommand(`add-record ${zone} ${recordName} ${type} ${ttl} ${newValue}`);
+
+  Logger.success(`DNS record updated safely: ${recordName}.${zone} ${type} ${newValue}`);
 }
 
 /**
@@ -126,14 +177,15 @@ export function createZone(zone: string) {
 
   Logger.info(`Creating new zone: ${zone} with NS: ${ns1}, ${ns2}`);
 
-  // Step 1: Create the zone with the primary NS
+  // Create zone with first NS
   runPdnsCommand(`create-zone ${zone} ${ns1}`);
 
-  // Step 2: Add secondary NS record
-  runPdnsCommand(`add-record ${zone} ${zone}. NS ${ns2}`);
+  // Add second NS at zone apex
+  runPdnsCommand(`add-record ${zone} @ NS ${ns2}`);
 
   Logger.success(`Zone created: ${zone} with NS: ${ns1}, ${ns2}`);
 }
+
 
 /**
  * Delete a zone
