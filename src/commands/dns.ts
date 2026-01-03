@@ -48,7 +48,7 @@ export function addDnsRecord(
   const zone = getZone(domain); // example.com from www.example.com
   Logger.info(`Adding DNS record: ${domain} ${type} ${value}`);
 
-  runPdnsCommand(`add-record ${zone} ${domain} ${type} ${ttl} ${value}`);
+  runPdnsCommand(`add-record ${zone} ${domain}. ${type} ${ttl} ${value}`);
 
   Logger.success(`DNS record added: ${domain} ${type} ${value}`);
 }
