@@ -70,6 +70,7 @@ export async function addStore(domain: string, storeType: StoreType) {
   // 2. Add DNS records (A + www)
   addDnsRecord(domain, "A", SERVER_IP);
   addDnsRecord(`www.${domain}`, "A", SERVER_IP);
+  addDnsRecord(`api.${domain}`, "A", SERVER_IP);
 
   // 3. Create Caddy config
   await createCaddyConfig(domain, storeType, port);

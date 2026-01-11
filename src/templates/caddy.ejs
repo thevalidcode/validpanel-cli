@@ -1,21 +1,30 @@
-<%- domain %>, www.<%- domain %> {
+www.<%- domain %> {
+    redir https://<%- domain %>{uri} permanent
+}
 
-    # Frontend: proxy for social-media-store, static for others
-    <% if (storeType === 'social-media-store') { %>
-    reverse_proxy 127.0.0.1:4340
+<%- domain %> {
 
     encode gzip
+
     log {
-      output file /var/log/caddy/social-media-store.log
+        output file /var/log/caddy/<%- domain %>.access.log
     }
 
+    <% if (storeType === 'social-media-store') { %>
+        reverse_proxy 127.0.0.1:4340
     <% } else { %>
-    root * /var/www/<%- storeType %>
-    file_server
+        root * /var/www/<%- storeType %>
+        file_server
     <% } %>
+}
 
-    # Backend proxy
-    handle_path /<%- storeType %>/backend/* {
-        reverse_proxy 127.0.0.1:<%- primaryPort %>
+api.<%- domain %> {
+
+    encode gzip
+
+    log {
+        output file /var/log/caddy/<%- domain %>.api.log
     }
+
+    reverse_proxy 127.0.0.1:<%- primaryPort %>
 }
