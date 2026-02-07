@@ -63,7 +63,7 @@ export async function addStore(domain: string, storeType: StoreType) {
     }
   } else {
     Logger.info(
-      `Subdomain detected (${domain} -> zone: ${domainZone}), skipping zone creation`
+      `Subdomain detected (${domain} -> zone: ${domainZone}), skipping zone creation`,
     );
   }
 

@@ -12,6 +12,8 @@ www.<%- domain %> {
 
     <% if (storeType === 'social-media-store') { %>
         reverse_proxy 127.0.0.1:4340
+    <% } else if (storeType === 'shop') { %>
+        reverse_proxy 127.0.0.1:4380
     <% } else { %>
         root * /var/www/<%- storeType %>
         file_server
